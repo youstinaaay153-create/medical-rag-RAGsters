@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Clinical Decision Support — Medical RAG</title>
+    <meta name="description" content="Evidence-Grounded Medical Intelligence powered by Retrieval-Augmented Generation">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-wrapper">
+
+        <!-- ===== HERO ===== -->
+        <header class="hero-section" id="hero">
+            <div class="hero-text">
+                <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Clinical AI Prototype</div>
+                <h1 id="mainTitle">AI Clinical Decision Support</h1>
+                <p class="hero-subtitle">Evidence-Grounded Medical Intelligence powered by <span class="highlight">Retrieval-Augmented Generation</span></p>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="dna-helix">
+                    <div class="helix-strand strand-a"></div>
+                    <div class="helix-strand strand-b"></div>
+                    <div class="helix-core"></div>
+                    <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+                    <div class="orbit orbit-2"><div class="orbit-dot"></div></div>
+                    <div class="orbit orbit-3"><div class="orbit-dot"></div></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== TOP PANELS ROW ===== -->
+        <div class="panels-row hidden">
+            <!-- System Status -->
+            <section class="panel glass-card" id="statusPanel">
+                <h2 class="panel-title"><i class="fa-solid fa-signal"></i> System Status</h2>
+                <ul class="status-grid" id="statusList">
+                    <li><span class="dot dot-loading"></span> RAG Engine <span class="val" id="stat-rag">Loading...</span></li>
+                    <li><span class="dot dot-loading"></span> Vector DB <span class="val" id="stat-vdb">Loading...</span></li>
+                    <li><span class="dot dot-loading"></span> Embeddings <span class="val" id="stat-emb">Loading...</span></li>
+                    <li><span class="dot dot-loading"></span> Gemini LLM <span class="val" id="stat-gem">Loading...</span></li>
+                </ul>
+            </section>
+
+            <!-- Knowledge Base -->
+            <section class="panel glass-card" id="kbPanel">
+                <h2 class="panel-title"><i class="fa-solid fa-book-medical"></i> Knowledge Base</h2>
+                <div class="kb-content" id="kbContent">
+                    <i class="fa-regular fa-file-pdf kb-icon"></i>
+                    <div>
+                        <h3 id="kbDocName">Loading...</h3>
+                        <p class="muted" id="kbMeta">Fetching document info...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RAG Configuration -->
+            <section class="panel glass-card" id="configPanel">
+                <h2 class="panel-title"><i class="fa-solid fa-sliders"></i> RAG Configuration</h2>
+                <div class="config-grid" id="configGrid">
+                    <div class="config-item"><span class="config-label">Chunk Size</span><span class="config-val" id="cfg-chunk">—</span></div>
+                    <div class="config-item"><span class="config-label">Chunk Overlap</span><span class="config-val" id="cfg-overlap">—</span></div>
+                    <div class="config-item"><span class="config-label">Top-K</span><span class="config-val" id="cfg-topk">—</span></div>
+                    <div class="config-item"><span class="config-label">Embedding</span><span class="config-val" id="cfg-embed">—</span></div>
+                    <div class="config-item"><span class="config-label">Vector DB</span><span class="config-val" id="cfg-vdb">—</span></div>
+                    <div class="config-item"><span class="config-label">LLM Model</span><span class="config-val" id="cfg-llm">—</span></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== QUESTION INPUT ===== -->
+        <section class="input-section glass-card-accent" id="inputSection">
+            <div class="input-row">
+                <div class="input-icon-wrap"><i class="fa-solid fa-stethoscope"></i></div>
+                <input type="text" id="questionInput" placeholder="Ask a clinical question..." autocomplete="off">
+                <button id="askBtn" class="ask-btn">
+                    <span class="btn-text">Ask AI</span>
+                    <i class="fa-solid fa-arrow-right btn-arrow"></i>
+                </button>
+            </div>
+            <div class="example-questions">
+                <span class="example-label">Try:</span>
+                <button class="example-q" data-q="What is the target blood pressure for a patient with known cardiovascular disease?">Target BP for CVD?</button>
+                <button class="example-q" data-q="What are the three recommended first-line drug classes for treating hypertension?">First-line drugs?</button>
+                <button class="example-q" data-q="Which antihypertensive medications are contraindicated during pregnancy?">Contraindicated in pregnancy?</button>
+                <button class="example-q" data-q="What is the recommended screening interval for breast cancer?">🚫 Out-of-scope test</button>
+            </div>
+        </section>
+
+        <!-- ===== RAG PIPELINE VISUALIZATION ===== -->
+        <section class="pipeline-section hidden" id="pipelineSection">
+            <h2 class="section-title">RAG Pipeline</h2>
+            <div class="pipeline-track">
+                <div class="p-node" id="pn-question"><div class="p-icon"><i class="fa-solid fa-comment-medical"></i></div><span>Question</span></div>
+                <div class="p-line" id="pl-1"></div>
+                <div class="p-node" id="pn-embed"><div class="p-icon"><i class="fa-solid fa-project-diagram"></i></div><span>Embedding</span></div>
+                <div class="p-line" id="pl-2"></div>
+                <div class="p-node" id="pn-vdb"><div class="p-icon"><i class="fa-solid fa-database"></i></div><span>Vector DB</span></div>
+                <div class="p-line" id="pl-3"></div>
+                <div class="p-node" id="pn-retrieve"><div class="p-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div><span>Retrieval</span></div>
+                <div class="p-line" id="pl-4"></div>
+                <div class="p-node" id="pn-evidence"><div class="p-icon"><i class="fa-solid fa-file-medical"></i></div><span>Evidence</span></div>
+                <div class="p-line" id="pl-5"></div>
+                <div class="p-node" id="pn-gemini"><div class="p-icon"><i class="fa-solid fa-microchip"></i></div><span>Gemini</span></div>
+                <div class="p-line" id="pl-6"></div>
+                <div class="p-node" id="pn-answer"><div class="p-icon"><i class="fa-solid fa-shield-heart"></i></div><span>Answer</span></div>
+            </div>
+        </section>
+
+        <!-- ===== RESULTS ===== -->
+        <section id="resultsSection" class="results-section hidden">
+            <!-- Question Echo -->
+            <div class="question-echo glass-card" id="questionEcho">
+                <i class="fa-solid fa-circle-question"></i>
+                <span id="echoText"></span>
+            </div>
+
+            <div class="results-grid">
+                <!-- Retrieved Evidence -->
+                <div class="evidence-panel glass-card hidden">
+                    <h2 class="panel-title evidence-title"><i class="fa-solid fa-layer-group"></i> Retrieved Evidence <span class="chunk-count" id="chunkCount"></span></h2>
+                    <div id="chunksContainer" class="chunks-container"></div>
+                </div>
+
+                <!-- AI Answer -->
+                <div class="answer-panel glass-card-bright">
+                    <div class="answer-header">
+                        <h2><i class="fa-solid fa-robot"></i> AI Clinical Recommendation</h2>
+                        <div class="confidence-pill" id="confPill">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span id="confLabel">—</span>
+                        </div>
+                    </div>
+                    <div class="answer-body" id="answerBody"></div>
+                    <div class="evidence-quote" id="evidenceQuote"></div>
+                    <div class="citations-block" id="citationsBlock">
+                        <h3><i class="fa-solid fa-bookmark"></i> Source Citations</h3>
+                        <ul id="citationsList"></ul>
+                    </div>
+                    <div class="answer-actions">
+                        <button class="act-btn" id="copyBtn"><i class="fa-regular fa-copy"></i> Copy</button>
+                        <button class="act-btn" id="transBtn"><i class="fa-solid fa-language"></i> Translate to Arabic</button>
+                    </div>
+                    <div id="translationBox" class="translation-box hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== REQUIREMENTS COVERAGE ===== -->
+        <section class="reqs-section glass-card hidden" id="reqsSection">
+            <h2 class="section-title"><i class="fa-solid fa-clipboard-check"></i> Requirements Coverage</h2>
+            <div class="reqs-table-wrap">
+                <table class="reqs-table">
+                    <thead><tr><th>Requirement</th><th>Status</th><th>Implementation</th></tr></thead>
+                    <tbody>
+                        <tr><td>Medical document ingestion</td><td><span class="badge-ok">Implemented</span></td><td><code>ingest.py</code></td></tr>
+                        <tr><td>Chunking (RecursiveCharacterTextSplitter)</td><td><span class="badge-ok">Implemented</span></td><td><code>ingest.py</code></td></tr>
+                        <tr><td>Embeddings (Local FastEmbed)</td><td><span class="badge-ok">Implemented</span></td><td><code>ingest.py</code></td></tr>
+                        <tr><td>Vector database (ChromaDB)</td><td><span class="badge-ok">Implemented</span></td><td><code>chroma_db/</code></td></tr>
+                        <tr><td>Retrieval with similarity scores</td><td><span class="badge-ok">Implemented</span></td><td><code>query.py</code></td></tr>
+                        <tr><td>LLM generation (Gemini structured output)</td><td><span class="badge-ok">Implemented</span></td><td><code>generate.py</code></td></tr>
+                        <tr><td>End-to-end RAG pipeline</td><td><span class="badge-ok">Implemented</span></td><td><code>pipeline.py</code></td></tr>
+                        <tr><td>JSON Schema validation</td><td><span class="badge-ok">Implemented</span></td><td><code>schema/response_schema.json</code></td></tr>
+                        <tr><td>Citation validation (anti-hallucination)</td><td><span class="badge-ok">Implemented</span></td><td><code>generate.py</code></td></tr>
+                        <tr><td>Safe refusal for out-of-scope questions</td><td><span class="badge-ok">Implemented</span></td><td><code>generate.py</code></td></tr>
+                        <tr><td>Web UI dashboard</td><td><span class="badge-ok">Implemented</span></td><td><code>server.py + static/</code></td></tr>
+                        <tr><td>Evaluation test sets</td><td><span class="badge-ok">Provided</span></td><td><code>eval/*.csv</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== EVALUATION ===== -->
+        <section class="eval-section glass-card hidden" id="evalSection">
+            <h2 class="section-title"><i class="fa-solid fa-flask-vial"></i> Evaluation Plan</h2>
+            <p class="muted" style="margin-bottom: 20px;">Based on the project's existing evaluation test sets (<code>eval/</code>). Results should be measured by running the test questions through the pipeline.</p>
+            <div class="eval-grid">
+                <div class="eval-card">
+                    <h3>Retrieval Quality</h3>
+                    <p>8 in-scope questions from <code>Day2_Evaluation_Test_Set.csv</code>. Measure Precision@k — does the correct source appear in the top-k retrieved chunks?</p>
+                </div>
+                <div class="eval-card">
+                    <h3>Refusal / Safety</h3>
+                    <p>10 adversarial prompts from <code>Day3_Refusal_Test_Cases.csv</code>. Verify the system refuses to answer off-topic, personal-advice, and prompt-injection attempts.</p>
+                </div>
+                <div class="eval-card">
+                    <h3>End-to-End Benchmark</h3>
+                    <p>12 test cases from <code>Day4_Starter_Benchmark.csv</code>. Measure Precision@k, Citation Accuracy, and Faithfulness.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== LIMITATIONS ===== -->
+        <section class="limits-section glass-card hidden" id="limitsSection">
+            <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation"></i> Limitations</h2>
+            <ul class="limits-list">
+                <li>Answers are limited to the indexed knowledge base (currently: WHO Hypertension Guideline 2021). Questions outside this scope will be refused.</li>
+                <li>Retrieval quality directly affects answer quality — if the correct chunk is not retrieved, the answer may be incomplete.</li>
+                <li>This is a <strong>decision-support prototype</strong>, not a diagnostic or prescriptive system.</li>
+                <li>The system uses local lightweight embeddings (BAAI/bge-small-en-v1.5) which may have lower accuracy than larger models.</li>
+                <li>No patient-specific reasoning — individualized dosing or drug-interaction questions are out of scope.</li>
+            </ul>
+        </section>
+
+        <!-- ===== FOOTER / DISCLAIMER ===== -->
+        <footer class="disclaimer" id="disclaimer">
+            <i class="fa-solid fa-shield-halved"></i>
+            <p><strong>Medical Disclaimer:</strong> Decision-support prototype. Always verify clinical recommendations against authoritative medical guidelines and professional clinical judgment. Do not use for actual patient care without independent verification.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
