@@ -12,7 +12,7 @@ Usage:
 import sys
 from pathlib import Path
 
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 
@@ -38,12 +38,19 @@ def load_pdfs(data_dir: Path):
         print("Add a guideline PDF there, then re-run this script.")
         sys.exit(1)
 
+    import re
     all_docs = []
     for pdf_path in pdf_files:
         print(f"Loading {pdf_path.name} ...")
-        loader = PyPDFLoader(str(pdf_path))
+        loader = PyMuPDFLoader(str(pdf_path))
         pages = loader.load()
         for page in pages:
+            # Clean up text for better parsing
+            text = page.page_content
+            text = re.sub(r' +', ' ', text) # Remove multiple spaces
+            text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text) # Remove single line breaks within sentences
+            page.page_content = text
+
             # Normalize metadata: every chunk downstream inherits this
             page.metadata["document_name"] = pdf_path.stem
             page.metadata["page_number"] = page.metadata.get("page", 0) + 1
@@ -59,7 +66,7 @@ def chunk_documents(documents):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=config.CHUNK_SIZE * 4,       # ~4 chars per token estimate
         chunk_overlap=config.CHUNK_OVERLAP * 4,
-        separators=["\n\n", "\n", ". ", " ", ""],
+        separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""],
     )
     chunks = splitter.split_documents(documents)
 
@@ -82,6 +89,7 @@ def build_index(chunks):
         embedding=embedding_fn,
         collection_name=config.COLLECTION_NAME,
         persist_directory=str(config.CHROMA_DIR),
+        collection_metadata={"hnsw:space": "cosine"}
     )
     print(f"Done. Index saved to {config.CHROMA_DIR}/")
     return vectordb

@@ -12,3 +12,4 @@ jsonschema>=4.0.0
 Flask>=3.0.0
 gunicorn>=21.0.0
 streamlit>=1.30.0
+pymupdf>=1.23.0

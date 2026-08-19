@@ -37,7 +37,60 @@
 /* ── Reset ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: var(--font); background: var(--bg-base); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+body { font-family: var(--font); background: var(--bg-base); color: var(--text); line-height: 1.6; overflow-x: hidden; transition: background 0.4s ease, color 0.4s ease; }
+
+/* ── Light Mode Overrides ── */
+body.light-mode {
+    --bg-base:       #f8fafc;
+    --bg-surface:    #f1f5f9;
+    --bg-card:       rgba(255, 255, 255, 0.7);
+    --bg-card-alt:   rgba(240, 245, 250, 0.8);
+    --glass-border:  rgba(0, 0, 0, 0.1);
+    --glass-glow:    rgba(2, 132, 199, 0.05);
+    
+    --cyan:          #0284c7;
+    --cyan-dim:      rgba(2, 132, 199, 0.15);
+    --cyan-glow:     rgba(2, 132, 199, 0.35);
+    --blue:          #0369a1;
+    --blue-accent:   #0284c7;
+    --purple:        #4f46e5;
+    
+    --text:          #1e293b;
+    --text-bright:   #0f172a;
+    --text-muted:    #64748b;
+    
+    --shadow-card:   0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.03);
+    --shadow-glow:   0 0 40px rgba(2,132,199,0.1);
+}
+
+/* Update hero and bright elements for light mode */
+body.light-mode .hero-section {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,248,255,0.9));
+}
+body.light-mode .glass-card-bright {
+    background: rgba(255,255,255,0.95);
+}
+body.light-mode .input-row input {
+    background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.15);
+    color: var(--text-bright);
+}
+body.light-mode .config-item {
+    background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.05);
+}
+body.light-mode .chunk-card {
+    background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1);
+}
+body.light-mode .act-btn { border-color: rgba(0,0,0,0.2); }
+body.light-mode .act-btn:hover { background: rgba(0,0,0,0.05); }
+body.light-mode .translation-box { background: rgba(255,255,255,0.9); }
+body.light-mode .citations-block li { background: rgba(255,255,255,0.8); }
+body.light-mode .bg-grid {
+    background-image:
+        linear-gradient(rgba(2,132,199,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(2,132,199,0.05) 1px, transparent 1px);
+}
+body.light-mode .bg-glow-1 { background: rgba(2,132,199,0.15); }
+body.light-mode .bg-glow-2 { background: rgba(79,70,229,0.1); }
 
 /* ── Background Effects ── */
 .bg-grid {
@@ -53,8 +106,21 @@ body { font-family: var(--font); background: var(--bg-base); color: var(--text);
 .bg-glow-1 { width: 500px; height: 500px; background: rgba(100,255,218,0.08); top: -10%; right: -5%; }
 .bg-glow-2 { width: 600px; height: 600px; background: rgba(56,189,248,0.06); bottom: -15%; left: -10%; }
 
-/* ── App Wrapper ── */
-.app-wrapper { max-width: 1260px; margin: 0 auto; padding: 30px 24px 60px; position: relative; z-index: 1; }
+/* ── App Wrapper & Sidebar ── */
+.main-layout { display: flex; min-height: 100vh; }
+.sidebar { width: 300px; background: var(--bg-surface); border-right: 1px solid var(--glass-border); padding: 25px 20px; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; box-shadow: 2px 0 20px rgba(0,0,0,0.2); }
+.app-wrapper { flex: 1; max-width: 1100px; margin: 0 auto; padding: 30px 24px 60px; position: relative; z-index: 1; overflow-y: auto; }
+
+.sidebar-title { font-size: 0.95rem; font-weight: 700; color: var(--text-bright); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-title i { color: var(--blue-accent); }
+.sidebar-list { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; margin-bottom: 20px; }
+.sidebar-list li { padding: 10px 14px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; }
+.sidebar-list li:hover { background: rgba(100,255,218,0.05); border-color: rgba(100,255,218,0.15); color: var(--cyan); }
+.new-chat-btn { background: rgba(100,255,218,0.1); color: var(--cyan); border: 1px solid var(--cyan-dim); padding: 12px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; margin-top: auto; }
+.new-chat-btn:hover { background: var(--cyan-dim); box-shadow: 0 0 15px var(--cyan-glow); }
+
+body.light-mode .sidebar { background: #e2e8f0; border-right-color: rgba(0,0,0,0.1); box-shadow: 2px 0 20px rgba(0,0,0,0.05); }
+body.light-mode .sidebar-list li { background: rgba(255,255,255,0.6); }
 
 /* ── Shared Glass Card ── */
 .glass-card {
@@ -102,6 +168,17 @@ body { font-family: var(--font); background: var(--bg-base); color: var(--text);
     border-radius: 24px; padding: 50px 55px;
     box-shadow: var(--shadow-card), 0 0 80px rgba(100,255,218,0.04);
     margin-bottom: 30px; position: relative; overflow: hidden;
+}
+.theme-toggle {
+    position: absolute; top: 20px; right: 20px; z-index: 10;
+    background: var(--bg-card-alt); color: var(--cyan);
+    border: 1px solid var(--glass-border); border-radius: 50%;
+    width: 44px; height: 44px; font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-card); transition: all 0.3s ease;
+}
+.theme-toggle:hover {
+    transform: scale(1.1); box-shadow: var(--shadow-glow); border-color: var(--cyan);
 }
 .hero-section::before {
     content: ''; position: absolute; inset: 0;
@@ -178,16 +255,21 @@ h1#mainTitle {
 .config-val { font-family: var(--mono); font-size: 0.85rem; color: var(--cyan); font-weight: 500; }
 
 /* ===================== INPUT ===================== */
-.input-section { margin-bottom: 30px; }
-.input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.input-section { margin-bottom: 30px; position: relative; }
+.safety-warning { background: rgba(248,113,113,0.1); border: 1px solid var(--danger); color: var(--danger); padding: 12px 16px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; animation: fadeUp 0.3s ease; }
+.input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; }
 .input-icon-wrap { font-size: 1.4rem; color: var(--cyan); padding: 0 8px; }
 .input-row input {
     flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);
-    border-radius: var(--radius-sm); padding: 16px 20px; font-size: 1.1rem;
+    border-radius: var(--radius-sm); padding: 16px 50px 16px 20px; font-size: 1.1rem;
     color: var(--text-bright); outline: none; transition: all 0.3s; font-family: var(--font);
 }
-.input-row input:focus { border-color: var(--cyan); box-shadow: 0 0 20px rgba(100,255,218,0.1); }
-.input-row input::placeholder { color: var(--text-muted); }
+.mic-btn { position: absolute; right: 160px; background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 10px; transition: 0.2s; border-radius: 50%; }
+.mic-btn:hover { color: var(--danger); background: rgba(248,113,113,0.1); }
+.mic-btn.recording { color: var(--danger); animation: corePulse 1s infinite alternate; }
+
+body.light-mode .input-row input { padding-right: 160px; }
+body.light-mode .mic-btn { right: 160px; }
 
 .ask-btn {
     background: linear-gradient(135deg, var(--cyan), var(--blue-accent));
@@ -261,6 +343,9 @@ h1#mainTitle {
 .answer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .answer-header h2 { font-size: 1.4rem; color: var(--text-bright); display: flex; align-items: center; gap: 10px; }
 .answer-header h2 i { color: var(--cyan); }
+.retrieval-info { display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 50px; }
+body.light-mode .retrieval-info { background: rgba(0,0,0,0.05); }
+
 .confidence-pill {
     padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 700;
     display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;
@@ -336,6 +421,32 @@ h1#mainTitle {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(100,255,218,0.15); border-radius: 10px; }
 
+/* ===================== MODALS & NEW UI ===================== */
+.modal { position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; }
+.modal-content { max-width: 700px; width: 90%; position: relative; animation: fadeUp 0.3s ease; padding: 40px; }
+.close-modal { color: var(--text-muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer; position: absolute; right: 20px; top: 15px; }
+.close-modal:hover { color: var(--text-bright); }
+.modal-body { margin-top: 20px; font-size: 1.1rem; line-height: 1.7; color: var(--text); }
+.modal-body ul { padding-left: 20px; margin-top: 10px; }
+.modal-body li { margin-bottom: 10px; }
+
+.follow-up-btn { background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); color: var(--blue-accent); padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+.follow-up-btn:hover { background: rgba(56,189,248,0.2); border-color: var(--blue-accent); transform: translateY(-2px); }
+
+/* ===================== RTL / ARABIC ===================== */
+body.rtl { direction: rtl; text-align: right; }
+body.rtl .sidebar { border-right: none; border-left: 1px solid var(--glass-border); box-shadow: -2px 0 20px rgba(0,0,0,0.2); }
+body.rtl .input-row input { padding: 16px 20px 16px 50px; }
+body.rtl .mic-btn { right: auto; left: 160px; }
+body.rtl .theme-toggle { right: auto; left: 20px; }
+body.rtl #langToggle { right: auto !important; left: 80px !important; }
+body.rtl .evidence-quote { border-left: none; border-right: 3px solid var(--blue-accent); border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+body.rtl .citations-block li { border-left: none; border-right: 2px solid var(--purple); }
+body.rtl .close-modal { right: auto; left: 20px; }
+body.rtl .limits-list li { padding-left: 16px; padding-right: 24px; }
+body.rtl .limits-list li::before { left: auto; right: 10px; content: '◂'; }
+body.rtl .ask-btn .btn-arrow { transform: rotate(180deg); }
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1024px) {
     .panels-row { grid-template-columns: 1fr 1fr; }
@@ -343,6 +454,8 @@ h1#mainTitle {
     .eval-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
+    .main-layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--glass-border); max-height: 200px; }
     .panels-row { grid-template-columns: 1fr; }
     .hero-section { flex-direction: column; text-align: center; padding: 30px 24px; gap: 30px; }
     .hero-text { max-width: 100%; }
@@ -351,6 +464,7 @@ h1#mainTitle {
     .p-line { display: none; }
     .input-row { flex-direction: column; }
     .ask-btn { width: 100%; justify-content: center; }
+    .mic-btn { top: 12px; right: 15px; }
     .example-questions { justify-content: center; }
 }
 @media (max-width: 480px) {

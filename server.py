@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 import os
 import glob
+import json
 
 from query import load_index, retrieve
 from generate import generate_grounded_answer
@@ -8,8 +9,10 @@ import config
 
 try:
     from google import genai
+    from google.genai import types
 except ImportError:
     genai = None
+    types = None
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
@@ -119,6 +122,62 @@ def translate():
     except Exception as e:
         print(f"Translation error: {e}")
         return jsonify({"error": "Translation failed"}), 500
+
+@app.route('/api/precheck', methods=['POST'])
+def precheck():
+    text = request.json.get('question', '').strip()
+    if not text or not genai or not config.GEMINI_API_KEY: 
+        return jsonify({"emergency": False, "out_of_scope": False})
+    try:
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        prompt = f"""Analyze this user question: "{text}"
+Respond ONLY with a valid JSON object exactly like this: {{"emergency": true/false, "out_of_scope": true/false}}
+"emergency" is true if it describes severe symptoms requiring immediate care (e.g. chest pain, severe bleeding, fainting).
+"out_of_scope" is true if it's completely unrelated to medicine, health, biology, or the general domain of the guideline.
+"""
+        response = client.models.generate_content(
+            model=config.GEMINI_MODEL, 
+            contents=prompt, 
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        return jsonify(json.loads(response.text.strip()))
+    except Exception as e: 
+        return jsonify({"emergency": False, "out_of_scope": False})
+
+@app.route('/api/followup', methods=['POST'])
+def followup():
+    data = request.json
+    try:
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        prompt = f"Based on this question: '{data.get('question')}' and answer: '{data.get('answer')}', provide exactly 3 short follow-up questions the user might want to ask next. Respond ONLY as a JSON array of 3 strings."
+        response = client.models.generate_content(
+            model=config.GEMINI_MODEL, 
+            contents=prompt, 
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        return jsonify({"questions": json.loads(response.text.strip())})
+    except Exception as e: 
+        return jsonify({"questions": []})
+
+@app.route('/api/simplify', methods=['POST'])
+def simplify():
+    try:
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        prompt = f"Rewrite this medical text in extremely simple layman's terms for a patient. Keep it concise:\n\n{request.json.get('answer')}"
+        response = client.models.generate_content(model=config.GEMINI_MODEL, contents=prompt)
+        return jsonify({"simple": response.text.strip()})
+    except Exception as e: 
+        return jsonify({"error": "Failed to simplify"})
+
+@app.route('/api/doctor_prep', methods=['POST'])
+def doctor_prep():
+    try:
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        prompt = f"Based on this Q&A, generate a short bulleted list of 3 important questions the patient should ask their doctor during their next visit. Q: {request.json.get('question')} A: {request.json.get('answer')}"
+        response = client.models.generate_content(model=config.GEMINI_MODEL, contents=prompt)
+        return jsonify({"prep": response.text.strip()})
+    except Exception as e: 
+        return jsonify({"error": "Failed to prepare"})
 
 if __name__ == '__main__':
     # Ensure static folder exists

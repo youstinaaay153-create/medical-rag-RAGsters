@@ -125,7 +125,7 @@ def validate_citations(response: dict, retrieved_results: list) -> bool:
     return True
 
 
-def generate_grounded_answer(question: str, retrieved_results: list) -> dict:
+def generate_grounded_answer(question: str, retrieved_results: list, layman_terms: bool = False) -> dict:
     """Generates a grounded answer using Gemini constrained by structured output
     and validates both the schema and citations before returning.
     """
@@ -150,11 +150,18 @@ def generate_grounded_answer(question: str, retrieved_results: list) -> dict:
 
     context_str = format_context_for_prompt(retrieved_results)
 
+    layman_instruction = (
+        "6. TRANSLATE your response so it is in the EXACT SAME LANGUAGE as the user's Question.\n"
+        "7. EXPLAIN THE MEDICAL CONCEPTS IN SIMPLE, LAYMAN'S TERMS so a non-medical user can easily understand it."
+    ) if layman_terms else (
+        "6. TRANSLATE your response so it is in the EXACT SAME LANGUAGE as the user's Question."
+    )
+
     # 4. Construct grounded prompt with strict instructions
     prompt = f"""You are a clinical decision support AI assistant. Your task is to answer the user's clinical question based strictly and ONLY on the provided Context below.
 
 CRITICAL GROUNDING RULES:
-1. Answer ONLY using facts directly stated in the Context.
+1. Answer ONLY using facts directly stated in the Context. BE EXTREMELY ACCURATE.
 2. Do NOT use outside medical knowledge, general background knowledge, or personal opinion.
 3. Do NOT invent, extrapolate, or hallucinate medical advice, document names, section names, or page numbers.
 4. If the provided Context does NOT contain sufficient evidence to answer the question:
@@ -167,6 +174,7 @@ CRITICAL GROUNDING RULES:
    - Quote or lightly trim the exact supporting text in "evidence".
    - Include citations in "citations" using the exact "Document" name and "Page" number from the source metadata. If section name is unavailable or 'N/A' in metadata, use "N/A".
    - Set "confidence" to "high", "medium", or "low".
+{layman_instruction}
 
 Context:
 {context_str}

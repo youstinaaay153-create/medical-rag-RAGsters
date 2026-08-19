@@ -1,5 +1,8 @@
 import streamlit as st
 import json
+import re
+from io import BytesIO
+from gtts import gTTS
 
 from query import load_index, retrieve
 from generate import generate_grounded_answer
@@ -21,22 +24,39 @@ except Exception as e:
     st.error("مشكلة في تحميل البيانات. اتأكد إنك عملت ingest.py الأول.")
     st.stop()
 
+@st.cache_data(show_spinner=False)
+def get_answer(_db, q, is_layman):
+    res = retrieve(_db, q)
+    return generate_grounded_answer(q, res, layman_terms=is_layman)
+
 # صندوق إدخال السؤال
 question = st.text_input("اكتب سؤالك هنا:", placeholder="مثال: What is the target blood pressure?")
+layman_terms = st.checkbox("تبسيط الإجابة (لغير الأطباء)", value=False)
 
 if st.button("بحث 🔍"):
     if not question.strip():
         st.warning("من فضلك اكتب سؤال الأول.")
     else:
-        with st.spinner("جاري البحث في المستندات الطبية..."):
-            results = retrieve(vectordb, question)
-        
-        with st.spinner("جاري تحليل الإجابة وتوليدها..."):
-            answer = generate_grounded_answer(question, results)
+        with st.spinner("جاري البحث في المستندات الطبية وتوليد الإجابة (يرجى الانتظار)..."):
+            answer = get_answer(vectordb, question, layman_terms)
         
         # عرض الإجابة
         st.subheader("💡 الإجابة (Recommendation)")
-        st.info(answer.get("recommendation", "لا توجد إجابة."))
+        recommendation = answer.get("recommendation", "لا توجد إجابة.")
+        st.info(recommendation)
+        
+        # إضافة الصوت
+        if recommendation and answer.get("confidence") != "insufficient":
+            with st.spinner("جاري تحضير المقطع الصوتي..."):
+                try:
+                    is_arabic = bool(re.search('[\u0600-\u06FF]', recommendation))
+                    tts_lang = 'ar' if is_arabic else 'en'
+                    tts = gTTS(text=recommendation, lang=tts_lang)
+                    fp = BytesIO()
+                    tts.write_to_fp(fp)
+                    st.audio(fp, format="audio/mp3")
+                except Exception as e:
+                    st.error("لم نتمكن من توليد المقطع الصوتي.")
         
         # عرض الدليل
         st.subheader("📜 الدليل من المستند (Evidence)")

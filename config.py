@@ -29,7 +29,7 @@ LOCAL_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
 # --- Retrieval ---
-TOP_K = 4
+TOP_K = 6
 
 # --- Generation (Gemini) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

@@ -17,12 +17,21 @@
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
-    <div class="app-wrapper">
+    <div class="main-layout">
+
+
+        <div class="app-wrapper" id="appWrapper">
 
         <!-- ===== HERO ===== -->
         <header class="hero-section" id="hero">
+            <button id="langToggle" class="theme-toggle" style="right: 74px;" aria-label="Toggle Language">
+                <i class="fa-solid fa-earth-americas"></i>
+            </button>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark/Light Mode">
+                <i class="fa-solid fa-sun"></i>
+            </button>
             <div class="hero-text">
-                <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Clinical AI Prototype</div>
+                <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="badge">Clinical AI Prototype</span></div>
                 <h1 id="mainTitle">AI Clinical Decision Support</h1>
                 <p class="hero-subtitle">Evidence-Grounded Medical Intelligence powered by <span class="highlight">Retrieval-Augmented Generation</span></p>
             </div>
@@ -79,11 +88,13 @@
 
         <!-- ===== QUESTION INPUT ===== -->
         <section class="input-section glass-card-accent" id="inputSection">
+            <div id="safetyWarning" class="safety-warning hidden"></div>
             <div class="input-row">
                 <div class="input-icon-wrap"><i class="fa-solid fa-stethoscope"></i></div>
                 <input type="text" id="questionInput" placeholder="Ask a clinical question..." autocomplete="off">
+                <button id="micBtn" class="mic-btn" aria-label="Voice Input"><i class="fa-solid fa-microphone"></i></button>
                 <button id="askBtn" class="ask-btn">
-                    <span class="btn-text">Ask AI</span>
+                    <span class="btn-text" data-i18n="ask">Ask AI</span>
                     <i class="fa-solid fa-arrow-right btn-arrow"></i>
                 </button>
             </div>
@@ -132,23 +143,43 @@
                 </div>
 
                 <!-- AI Answer -->
-                <div class="answer-panel glass-card-bright">
+                <div class="answer-panel glass-card-bright" id="answerContainer">
                     <div class="answer-header">
-                        <h2><i class="fa-solid fa-robot"></i> AI Clinical Recommendation</h2>
-                        <div class="confidence-pill" id="confPill">
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span id="confLabel">—</span>
+                        <h2><i class="fa-solid fa-robot"></i> <span data-i18n="ai_rec">AI Clinical Recommendation</span></h2>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div class="retrieval-info hidden" id="retrievalInfo">
+                                <span><i class="fa-solid fa-bolt"></i> <span id="respTime"></span>s</span>
+                                <span><i class="fa-solid fa-book"></i> <span id="srcCount"></span> sources</span>
+                            </div>
+                            <div class="confidence-pill" id="confPill">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span id="confLabel">—</span>
+                            </div>
                         </div>
                     </div>
                     <div class="answer-body" id="answerBody"></div>
                     <div class="evidence-quote" id="evidenceQuote"></div>
                     <div class="citations-block" id="citationsBlock">
-                        <h3><i class="fa-solid fa-bookmark"></i> Source Citations</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0;"><i class="fa-solid fa-bookmark"></i> <span data-i18n="sources">Source Citations</span></h3>
+                        </div>
                         <ul id="citationsList"></ul>
+                        <!-- Inline Chunks Container -->
+                        <div id="inlineChunks" class="hidden" style="margin-top: 15px;"></div>
                     </div>
+                    
+                    <div id="followUpsContainer" class="follow-ups hidden">
+                        <h4 style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;"><i class="fa-solid fa-lightbulb"></i> <span data-i18n="suggested">Suggested Follow-ups</span></h4>
+                        <div id="followUpsList" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                    </div>
+
                     <div class="answer-actions">
-                        <button class="act-btn" id="copyBtn"><i class="fa-regular fa-copy"></i> Copy</button>
-                        <button class="act-btn" id="transBtn"><i class="fa-solid fa-language"></i> Translate to Arabic</button>
+                        <button class="act-btn" id="copyBtn"><i class="fa-regular fa-copy"></i> <span data-i18n="copy">Copy</span></button>
+                        <button class="act-btn" id="saveBtn"><i class="fa-solid fa-star"></i> <span data-i18n="save">Save</span></button>
+                        <button class="act-btn" id="transBtn"><i class="fa-solid fa-language"></i> <span data-i18n="translate">Translate to Arabic</span></button>
+                        <button class="act-btn" id="simplifyBtn"><i class="fa-solid fa-brain"></i> <span data-i18n="simplify">Explain Simple</span></button>
+                        <button class="act-btn" id="prepBtn"><i class="fa-solid fa-user-doctor"></i> <span data-i18n="prep">Doctor Prep</span></button>
+                        <button class="act-btn" id="pdfBtn"><i class="fa-solid fa-file-pdf"></i> <span data-i18n="download">Download Report</span></button>
                     </div>
                     <div id="translationBox" class="translation-box hidden"></div>
                 </div>
@@ -214,10 +245,30 @@
         <!-- ===== FOOTER / DISCLAIMER ===== -->
         <footer class="disclaimer" id="disclaimer">
             <i class="fa-solid fa-shield-halved"></i>
-            <p><strong>Medical Disclaimer:</strong> Decision-support prototype. Always verify clinical recommendations against authoritative medical guidelines and professional clinical judgment. Do not use for actual patient care without independent verification.</p>
+            <p><strong data-i18n="disclaimer">Medical Disclaimer:</strong> <span data-i18n="disc_text">Decision-support prototype. Always verify clinical recommendations against authoritative medical guidelines and professional clinical judgment. Do not use for actual patient care without independent verification.</span></p>
         </footer>
+        </div> <!-- End app-wrapper -->
+    </div> <!-- End main-layout -->
+
+    <!-- Modals -->
+    <div id="simpleModal" class="modal hidden">
+        <div class="modal-content glass-card-bright">
+            <span class="close-modal" id="closeSimple">&times;</span>
+            <h2><i class="fa-solid fa-brain"></i> <span data-i18n="simple_expl">Simple Explanation</span></h2>
+            <div id="simpleText" class="modal-body"></div>
+        </div>
     </div>
 
+    <div id="prepModal" class="modal hidden">
+        <div class="modal-content glass-card-bright">
+            <span class="close-modal" id="closePrep">&times;</span>
+            <h2><i class="fa-solid fa-user-doctor"></i> <span data-i18n="doc_prep">Prepare for Doctor Visit</span></h2>
+            <div id="prepText" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Required for PDF Export without relying on print dialog hacks -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
